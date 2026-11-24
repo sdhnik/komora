@@ -1,0 +1,24 @@
+{
+  "name": "komora",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Komora — тижневий список покупок, який складається сам",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "idb": "^8.0.4",
+    "preact": "^10.29.8"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "fake-indexeddb": "^6.2.8",
+    "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.1.1"
+  }
+}
