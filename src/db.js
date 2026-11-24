@@ -110,15 +110,15 @@ export async function enqueueAll() {
  * Одноразове оновлення іконок після розширення словника: міняємо лише ті,
  * що досі стоять на старій автоматичній іконці.
  */
-export async function migrateIcons(rules) {
+export async function migrateIcons(rules, key = 'migr-icons-1') {
   const db = await openKomora();
-  if (await db.get('meta', 'migr-icons-1')) return 0;
+  if (await db.get('meta', key)) return 0;
   let n = 0;
   for (const p of await db.getAll('products')) {
     const rule = rules.find((r) => r.from === p.icon && r.match.some((k) => p.name.toLowerCase().includes(k)));
     if (rule && !p.deleted) { await saveProduct({ ...p, icon: rule.to }); n++; }
   }
-  await db.put('meta', true, 'migr-icons-1');
+  await db.put('meta', true, key);
   return n;
 }
 

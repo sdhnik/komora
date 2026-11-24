@@ -16,6 +16,7 @@ export const CATEGORIES = [
 export const ICONS = [
   ['milk', 'dairy', 'молок кефір ряжан вершк'],
   ['bowl', 'dairy', 'йогурт вівсян пластівц гранол мюслі каш'],
+  ['curd', 'dairy', 'кисломол творог сирн'],
   ['cheese', 'dairy', 'сир сирок бринз моцарел'],
   ['butter', 'dairy', 'масло вершков маргарин'],
   ['egg', 'dairy', 'яйц яйце'],
@@ -37,7 +38,8 @@ export const ICONS = [
   ['greens', 'veg', 'салат капуст шпинат рукол'],
   ['herb', 'veg', 'кріп петрушк зелень базилік кінз'],
   ['tomato', 'veg', 'помідор томат черрі'],
-  ['cucumber', 'veg', 'огір кабач'],
+  ['zucchini', 'veg', 'кабач цукіні'],
+  ['cucumber', 'veg', 'огір'],
   ['carrot', 'veg', 'морк'],
   ['onion', 'veg', 'цибул'],
   ['garlic', 'veg', 'часник'],

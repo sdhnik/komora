@@ -64,7 +64,12 @@ export function App() {
       { from: 'rice', to: 'grain', match: ['кус', 'кіноа', 'булгур', 'пшон', 'борошн'] },
       { from: 'honey', to: 'maple', match: ['сироп'] },
       { from: 'jar', to: 'tomato', match: ['пасата', 'passata'] },
-    ]).catch(() => {}).then(() => reload()).then(() => runSync());
+    ])
+      .then(() => migrateIcons([
+        { from: 'cucumber', to: 'zucchini', match: ['кабач', 'цукіні'] },
+        { from: 'cheese', to: 'curd', match: ['кисломол', 'творог', 'сирн'] },
+      ], 'migr-icons-2'))
+      .catch(() => {}).then(() => reload()).then(() => runSync());
     getMeta('syncState').then((m) => m?.lastSync && setSync((x) => ({ ...x, lastSync: m.lastSync, eventsTotal: m.eventsCount })));
     const onPop = (e) => setRoute(e.state?.route ?? { tab: 'list' });
     const onVisible = () => document.visibilityState === 'visible' && reload().then(() => runSync());
