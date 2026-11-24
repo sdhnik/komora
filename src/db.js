@@ -43,8 +43,9 @@ export async function loadAll() {
     db.getAll('events'),
     db.get('meta', 'settings'),
   ]);
+  const live = products.filter((p) => !p.deleted);
   events.sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0) || (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
-  return { products, events, settings: { ...DEFAULT_SETTINGS, ...settings } };
+  return { products: live, events, settings: { ...DEFAULT_SETTINGS, ...settings } };
 }
 
 /** Записує подію і ставить її в чергу на синхронізацію. Повертає подію. */
@@ -78,9 +79,67 @@ export async function saveProduct(fields, { addedDate } = {}) {
   return product;
 }
 
+/** Видалення назавжди: позначка deleted, щоб видалення дійшло і до таблиці. */
 export async function deleteProduct(id) {
   const db = await openKomora();
-  await db.delete('products', id);
+  const p = await db.get('products', id);
+  if (p) await saveProduct({ ...p, deleted: true });
+}
+
+export async function getMeta(key) {
+  const db = await openKomora();
+  return db.get('meta', key);
+}
+
+export async function setMeta(key, value) {
+  const db = await openKomora();
+  await db.put('meta', value, key);
+}
+
+/** Поставити в чергу все локальне (при підключенні нової таблиці). */
+export async function enqueueAll() {
+  const db = await openKomora();
+  const [products, events] = await Promise.all([db.getAll('products'), db.getAll('events')]);
+  const tx = db.transaction('outbox', 'readwrite');
+  for (const p of products) tx.store.add({ kind: 'product', data: p });
+  for (const e of events) tx.store.add({ kind: 'event', data: e });
+  await tx.done;
+}
+
+/** Черга синхронізації. */
+export async function readOutbox() {
+  const db = await openKomora();
+  return db.getAll('outbox');
+}
+
+export async function clearOutbox(seqs) {
+  const db = await openKomora();
+  const tx = db.transaction('outbox', 'readwrite');
+  for (const s of seqs) tx.store.delete(s);
+  await tx.done;
+}
+
+/** Зливає дані з таблиці: нові події додаються, товар оновлюється, якщо віддалений новіший. */
+export async function mergeRemote(events, products) {
+  const db = await openKomora();
+  const tx = db.transaction(['events', 'products'], 'readwrite');
+  let addedEvents = 0;
+  let changedProducts = 0;
+  for (const e of events) {
+    if (!(await tx.objectStore('events').get(e.id))) {
+      await tx.objectStore('events').put(e);
+      addedEvents++;
+    }
+  }
+  for (const p of products) {
+    const local = await tx.objectStore('products').get(p.id);
+    if (!local || String(p.updatedAt) > String(local.updatedAt)) {
+      await tx.objectStore('products').put(p);
+      changedProducts++;
+    }
+  }
+  await tx.done;
+  return { addedEvents, changedProducts };
 }
 
 export async function saveSettings(settings) {

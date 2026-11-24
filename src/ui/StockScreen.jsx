@@ -33,7 +33,7 @@ function Row({ x, color, onBuy, onOpen }) {
   );
 }
 
-export function StockScreen({ week, data, pending, act, open }) {
+export function StockScreen({ week, data, pending, sync, act, open }) {
   const [q, setQ] = useState('');
   const [showArchive, setShowArchive] = useState(false);
   const query = q.trim().toLowerCase();
@@ -45,7 +45,7 @@ export function StockScreen({ week, data, pending, act, open }) {
   return (
     <main class="screen shell">
       <Head
-        left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} onClick={() => act.later('Синхронізація з таблицею з’явиться на етапі 5')} />}
+        left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} status={sync.status} onClick={() => (data.settings.syncUrl ? act.syncNow() : open('settings'))} />}
         title="Запаси"
         sub={`${week.total} ${plural(week.total, ['товар', 'товари', 'товарів'])}`}
         right={<button class="round" aria-label="Налаштування" onClick={() => open('settings')}><Ico name="gear" /></button>}

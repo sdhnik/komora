@@ -45,14 +45,17 @@ export function Head({ left, title, sub, right }) {
   );
 }
 
-export function SyncButton({ pending, connected, onClick }) {
-  const label = !connected ? 'Синхронізацію не підключено' : pending ? `${pending} змін чекають` : 'Синхронізовано';
+export function SyncButton({ pending, connected, status, onClick }) {
+  const error = connected && status === 'error';
+  const label = !connected ? 'Синхронізацію не підключено' : error ? 'Помилка синхронізації' : status === 'syncing' ? 'Синхронізую…' : pending ? `${pending} змін чекають` : 'Синхронізовано';
+  const stroke = !connected ? '#A4A9A5' : error ? '#D2401F' : '#141414';
   return (
-    <button class="round" aria-label={label} title={label} onClick={onClick}>
+    <button class={`round ${status === 'syncing' ? 'pulse' : ''}`} aria-label={label} title={label} onClick={onClick}>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5H7z" stroke={connected ? '#141414' : '#A4A9A5'} />
-        {connected && !pending && <path d="M9.5 13.5l2 2 3.5-3.5" stroke="#2E9C6A" />}
-        {connected && pending > 0 && <text x="12" y="15.5" text-anchor="middle" font-size="7" font-weight="700" fill="#FF6A3D" stroke="none">{pending > 9 ? '9+' : pending}</text>}
+        <path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5H7z" stroke={stroke} />
+        {connected && !error && !pending && status !== 'syncing' && <path d="M9.5 13.5l2 2 3.5-3.5" stroke="#2E9C6A" />}
+        {error && <path d="M12 10.5v3M12 15.8v.01" stroke="#D2401F" stroke-width="2" />}
+        {connected && !error && pending > 0 && <text x="12" y="15.5" text-anchor="middle" font-size="7" font-weight="700" fill="#FF6A3D" stroke="none">{pending > 9 ? '9+' : pending}</text>}
       </svg>
     </button>
   );

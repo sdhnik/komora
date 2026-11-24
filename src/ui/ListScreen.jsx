@@ -48,7 +48,7 @@ function ItemCard({ x, packs, setPacks, onBuy, onOpen }) {
   );
 }
 
-export function ListScreen({ week, data, pending, session, act, open }) {
+export function ListScreen({ week, data, pending, sync, session, act, open }) {
   const [packsFor, setPacksFor] = useState({});
   const [showBought, setShowBought] = useState(false);
   const boughtIds = new Set(session.map((x) => x.product.id));
@@ -59,7 +59,7 @@ export function ListScreen({ week, data, pending, session, act, open }) {
   return (
     <main class="screen shell">
       <Head
-        left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} onClick={() => act.later('Синхронізація з таблицею з’явиться на етапі 5')} />}
+        left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} status={sync.status} onClick={() => (data.settings.syncUrl ? act.syncNow() : open('settings'))} />}
         title="Список"
         sub={longDate(week.trip)}
         right={<button class="round" aria-label="Налаштування" onClick={() => open('settings')}><Ico name="gear" /></button>}
