@@ -1,7 +1,7 @@
 {
   "name": "komora",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Komora — тижневий список покупок, який складається сам",
   "scripts": {

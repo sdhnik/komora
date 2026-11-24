@@ -14,6 +14,8 @@ const P = {
   edit: <path d="M4 20h4L19 9l-4-4L4 16z" />,
   archive: <><rect x="3" y="4" width="18" height="5" rx="1" /><path d="M5 9v10h14V9M10 13h4" /></>,
   trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
+  download: <path d="M12 4v11M8 11l4 4 4-4M5 20h14" />,
+  upload: <path d="M12 20V9M8 13l4-4 4 4M5 4h14" />,
   cabinet: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M5 10h14M9 6.5h1.5M9 13.5v3" /></>,
 };
 

@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, saveSettings } from '../db.js';
+import { loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, exportBackup, saveSettings } from '../db.js';
 import { buildWeek, replay, forecast } from '../core/model.js';
 import { todayISO, addDays } from '../core/dates.js';
-import { seedDemo } from '../dev/seed.js';
 import { TabBar, Toast } from './components.jsx';
 import { ListScreen } from './ListScreen.jsx';
 import { CheckScreen } from './CheckScreen.jsx';
@@ -117,6 +116,24 @@ export function App() {
       showToast(`${p.name}: видалено`);
     },
     later: (what) => showToast(what),
+    saveSettings: async (patch) => {
+      await saveSettings({ ...data.settings, ...patch });
+      await reload();
+    },
+    backup: async () => {
+      const copy = await exportBackup();
+      const blob = new Blob([JSON.stringify(copy, null, 1)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `komora-${today}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+      await saveSettings({ ...data.settings, lastBackupAt: new Date().toISOString() });
+      await reload();
+      showToast('Копію збережено');
+    },
     addProducts: async (list) => {
       for (const fields of list) await saveProduct(fields);
       await reload();
@@ -137,8 +154,11 @@ export function App() {
       await reload();
       showToast('Дані відновлено');
     },
-    seed: async () => { await seedDemo(); await reload(); },
-    wipe: async () => { await importBackup({ app: 'komora', products: [], events: [], settings: data.settings }); await reload(); },
+    wipe: async () => {
+      await importBackup({ app: 'komora', products: [], events: [], settings: { ...data.settings, welcomed: false } });
+      setRoute({ tab: 'list' });
+      await reload();
+    },
   };
 
   if (!data || !week) return null;

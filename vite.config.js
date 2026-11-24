@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 // GitHub Pages віддає сайт з /komora/
 const base = process.env.BASE_PATH ?? '/komora/';
 
 export default defineConfig({
   base,
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     preact(),
     VitePWA({

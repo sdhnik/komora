@@ -300,3 +300,23 @@ button:disabled { cursor: default; }
 .restore-opt > span { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex: none; }
 .restore-opt b { display: block; font-size: 16px; font-weight: 600; }
 .restore-opt small { font-size: 13px; color: var(--muted); }
+
+/* Налаштування */
+.set-title { font-size: 15px; font-weight: 700; color: #4C524E; padding: 10px 4px 0; }
+.set-card { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.set-card b, .set-row b { display: block; font-size: 15px; font-weight: 600; }
+.set-card small, .set-row small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.days7 { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.days7 button { height: 44px; border: 0; border-radius: 12px; background: var(--soft); font-size: 14px; font-weight: 600; padding: 0; }
+.days7 button.on { background: var(--accent); color: #fff; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+.set-ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; flex: none; }
+.btn-dark { border: 0; border-radius: 14px; height: 48px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; }
+.set-list { padding: 4px 16px; }
+.set-list button { width: 100%; border: 0; background: transparent; padding: 12px 0; display: flex; align-items: center; gap: 12px; text-align: left; border-bottom: 1px solid var(--line); }
+.set-list button:last-of-type { border-bottom: 0; }
+.set-list b { display: block; font-size: 15px; font-weight: 600; }
+.set-list small { display: block; font-size: 13px; color: var(--muted); }
+.set-list .danger, .set-list .danger b { color: var(--urgent); }
+.confirm { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; border: 2px solid var(--accent); }
+.confirm p { font-size: 15px; }
