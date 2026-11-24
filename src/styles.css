@@ -41,6 +41,10 @@ img { display: block; }
 
 .screen { max-width: 480px; margin: 0 auto; min-height: 100vh; padding: calc(18px + var(--safe-t)) 16px calc(104px + var(--safe-b)); display: flex; flex-direction: column; gap: 10px; }
 .screen.no-tabs { padding-bottom: calc(28px + var(--safe-b)); }
+/* Екран-оболонка: шапка нерухома, прокручується лише список */
+.screen.shell { height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; padding-bottom: 0; }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 -16px; padding: 2px 16px calc(104px + var(--safe-b)); display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { display: none; }
 
 /* Шапка */
 .head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 8px; padding: 4px 4px 6px; }

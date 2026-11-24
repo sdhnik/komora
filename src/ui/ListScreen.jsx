@@ -57,7 +57,7 @@ export function ListScreen({ week, data, pending, session, act, open }) {
   const empty = data.products.length === 0;
 
   return (
-    <main class="screen">
+    <main class="screen shell">
       <Head
         left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} onClick={() => act.later('Синхронізація з таблицею з’явиться на етапі 5')} />}
         title="Список"
@@ -90,6 +90,7 @@ export function ListScreen({ week, data, pending, session, act, open }) {
         </div>
       )}
 
+      <div class="scroll">
       {list.map((x) => (
         <ItemCard
           key={x.product.id}
@@ -125,6 +126,7 @@ export function ListScreen({ week, data, pending, session, act, open }) {
           ))}
         </>
       )}
+      </div>
     </main>
   );
 }

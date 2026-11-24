@@ -43,7 +43,7 @@ export function StockScreen({ week, data, pending, act, open }) {
   const groups = GROUPS.map(([id, title, color]) => ({ id, title, color, rows: week.groups[id].filter(match) })).filter((g) => g.rows.length);
 
   return (
-    <main class="screen">
+    <main class="screen shell">
       <Head
         left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} onClick={() => act.later('Синхронізація з таблицею з’явиться на етапі 5')} />}
         title="Запаси"
@@ -62,6 +62,7 @@ export function StockScreen({ week, data, pending, act, open }) {
         </button>
       </div>
 
+      <div class="scroll">
       {!query && learning > 0 && (
         <div class="card learn">
           <div class="progress-top">
@@ -106,6 +107,7 @@ export function StockScreen({ week, data, pending, act, open }) {
           ))}
         </>
       )}
+      </div>
     </main>
   );
 }
