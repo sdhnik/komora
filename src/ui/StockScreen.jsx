@@ -62,7 +62,6 @@ export function StockScreen({ week, data, pending, act, open }) {
         </button>
       </div>
 
-      <div class="scroll">
       {!query && learning > 0 && (
         <div class="card learn">
           <div class="progress-top">
@@ -72,6 +71,8 @@ export function StockScreen({ week, data, pending, act, open }) {
           <div class="learn-dots">{week.items.map((x, i) => <i key={i} class={i < week.known ? 'on' : ''} />)}</div>
         </div>
       )}
+
+      <div class="scroll">
 
       {groups.map((g) => (
         <section key={g.id} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
