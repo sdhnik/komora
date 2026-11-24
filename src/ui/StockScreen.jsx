@@ -25,9 +25,9 @@ function Row({ x, color, onBuy, onOpen }) {
       <button
         class={`circle ${done ? 'done' : ''}`}
         aria-label={`Купив: ${p.name}`}
-        onClick={() => { setDone(true); setTimeout(() => { setDone(false); onBuy(p, 1); }, 250); }}
+        onClick={() => { if (navigator.vibrate) navigator.vibrate(15); setDone(true); setTimeout(() => { setDone(false); onBuy(p, 1); }, 300); }}
       >
-        <i>{done && <Ico name="check" size={14} color="#fff" width={3} />}</i>
+        <i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="tick" d="M5 12.5l4.5 4.5L19 7.5" /></svg></i>
       </button>
     </div>
   );

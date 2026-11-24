@@ -1,4 +1,4 @@
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Head, Ico, SyncButton, Tile, Stepper } from './components.jsx';
 import { addDays } from '../core/dates.js';
 import { packLabel, daysLabel, isUrgent, boughtLabel, longDate, shortDate, plural } from './format.js';
@@ -17,32 +17,44 @@ function useLongPress(onLong, ms = 500) {
   };
 }
 
-function ItemCard({ x, packs, setPacks, onBuy, onOpen }) {
+const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Анімація покупки (специфікація, «Дизайн і анімації»):
+ * 0–150 мс галочка, 150–400 мс пауза з перекресленою назвою, 400–650 мс картка виїжджає, решта підтягується.
+ */
+function ItemCard({ x, packs, setPacks, onBuy, onOpen, entering }) {
   const p = x.product;
-  const [leaving, setLeaving] = useState(false);
+  const [phase, setPhase] = useState(null); // null | 'check' | 'fade' | 'out'
   const press = useLongPress(onOpen);
   const [bold, grey] = packLabel(p, packs);
   const buy = () => {
-    if (press.fired.current || leaving) return;
-    setLeaving(true);
-    setTimeout(async () => { await onBuy(p, packs); setLeaving(false); }, 280);
+    if (press.fired.current || phase) return;
+    if (navigator.vibrate) navigator.vibrate(15);
+    if (reduced()) { onBuy(p, packs); return; }
+    setPhase('check');
+    setTimeout(() => setPhase('fade'), 150);
+    setTimeout(() => setPhase('out'), 400);
+    setTimeout(async () => { await onBuy(p, packs); setPhase(null); }, 650);
   };
   return (
-    <div class={`card item ${leaving ? 'leaving' : ''}`}>
-      <button class="item-hit" aria-label={`Куплено: ${p.name}`} onClick={buy} {...press.handlers} />
-      <Tile icon={p.icon} />
-      <div class="item-main">
-        <div>
-          <div class="item-name"><b>{p.name}</b>{x.state.status === 'learning' && <span class="badge">приблизно</span>}</div>
-          <div class={`days ${isUrgent(x.days) ? 'urgent' : ''}`}>{daysLabel(x.days)}</div>
+    <div class={`slot ${phase === 'out' ? 'gone' : ''} ${entering ? 'enter' : ''}`}>
+      <div class={`card item ${phase ? `buy-${phase}` : ''}`}>
+        <button class="item-hit" aria-label={`Куплено: ${p.name}`} onClick={buy} {...press.handlers} />
+        <Tile icon={p.icon} />
+        <div class="item-main">
+          <div>
+            <div class="item-name"><b>{p.name}</b>{x.state.status === 'learning' && <span class="badge">приблизно</span>}</div>
+            <div class={`days ${isUrgent(x.days) ? 'urgent' : ''}`}>{daysLabel(x.days)}</div>
+          </div>
+          <div class="pack"><b>{bold}</b><span>{grey}</span></div>
         </div>
-        <div class="pack"><b>{bold}</b><span>{grey}</span></div>
-      </div>
-      <div class="item-side">
-        <button class={`circle ${leaving ? 'done' : ''}`} aria-label={`Куплено: ${p.name}`} onClick={buy}>
-          <i>{leaving && <Ico name="check" size={14} color="#fff" width={3} />}</i>
-        </button>
-        <Stepper value={packs} onDec={() => setPacks(Math.max(1, packs - 1))} onInc={() => setPacks(packs + 1)} />
+        <div class="item-side">
+          <button class={`circle ${phase ? 'done' : ''}`} aria-label={`Куплено: ${p.name}`} onClick={buy}>
+            <i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="tick" d="M5 12.5l4.5 4.5L19 7.5" /></svg></i>
+          </button>
+          <Stepper value={packs} onDec={() => setPacks(Math.max(1, packs - 1))} onInc={() => setPacks(packs + 1)} />
+        </div>
       </div>
     </div>
   );
@@ -55,6 +67,11 @@ export function ListScreen({ week, data, pending, sync, session, act, open }) {
   const list = week.list.filter((x) => !boughtIds.has(x.product.id));
   const total = list.length + session.length;
   const empty = data.products.length === 0;
+  // Картки, що з'явились після першого показу (наприклад, після «Скасувати»), в'їжджають назад.
+  const seen = useRef(null);
+  const ids = list.map((x) => x.product.id);
+  const fresh = seen.current ? new Set(ids.filter((id) => !seen.current.has(id))) : new Set();
+  useEffect(() => { seen.current = new Set(ids); });
 
   return (
     <main class="screen shell">
@@ -99,6 +116,7 @@ export function ListScreen({ week, data, pending, sync, session, act, open }) {
           setPacks={(n) => setPacksFor({ ...packsFor, [x.product.id]: n })}
           onBuy={act.buy}
           onOpen={() => open('product', { id: x.product.id })}
+          entering={fresh.has(x.product.id)}
         />
       ))}
 

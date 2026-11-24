@@ -123,7 +123,6 @@ export function App() {
 
   const act = {
     buy: async (p, packs) => {
-      if (navigator.vibrate) navigator.vibrate(15);
       const ev = await addEvent(p.id, 'bought', packs);
       await reload();
       withUndo(`Куплено: ${p.name}`, ev);

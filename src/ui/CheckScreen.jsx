@@ -30,6 +30,7 @@ export function CheckScreen({ week, act, back }) {
   const answer = (value) => {
     if (busy.current || !cur) return;
     busy.current = true;
+    if (navigator.vibrate) navigator.vibrate(10);
     setPicked(value);
     setTimeout(async () => {
       await act.answer(cur.product, value);
@@ -75,7 +76,7 @@ export function CheckScreen({ week, act, back }) {
 
       {!done && cur && (
         <>
-          <div class="card qcard">
+          <div class="card qcard slide-in" key={cur.product.id}>
             <Tile icon={cur.product.icon} />
             <div style={{ minWidth: 0 }}>
               <h1>{cur.product.name}</h1>
