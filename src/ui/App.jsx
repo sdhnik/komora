@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, exportBackup, saveSettings, enqueueAll, getMeta } from '../db.js';
+import { migrateIcons, loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, exportBackup, saveSettings, enqueueAll, getMeta } from '../db.js';
 import { syncNow, ping, resetSyncState } from '../sync.js';
 import { buildWeek, replay, forecast } from '../core/model.js';
 import { todayISO, addDays } from '../core/dates.js';
@@ -58,7 +58,13 @@ export function App() {
   };
 
   useEffect(() => {
-    reload().then(() => runSync());
+    migrateIcons([
+      { from: 'milk', to: 'bowl', match: ['йогурт'] },
+      { from: 'rice', to: 'bowl', match: ['вівсян', 'пластівц', 'гранол', 'мюслі'] },
+      { from: 'rice', to: 'grain', match: ['кус', 'кіноа', 'булгур', 'пшон', 'борошн'] },
+      { from: 'honey', to: 'maple', match: ['сироп'] },
+      { from: 'jar', to: 'tomato', match: ['пасата', 'passata'] },
+    ]).catch(() => {}).then(() => reload()).then(() => runSync());
     getMeta('syncState').then((m) => m?.lastSync && setSync((x) => ({ ...x, lastSync: m.lastSync, eventsTotal: m.eventsCount })));
     const onPop = (e) => setRoute(e.state?.route ?? { tab: 'list' });
     const onVisible = () => document.visibilityState === 'visible' && reload().then(() => runSync());

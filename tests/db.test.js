@@ -56,3 +56,17 @@ describe('видалення всіх даних', () => {
     expect(await pendingCount()).toBe(0);
   });
 });
+
+describe('оновлення іконок', () => {
+  it('міняє лише стару автоматичну іконку і лише раз', async () => {
+    const { migrateIcons } = await import('../src/db.js');
+    await saveProduct({ name: 'Булгур', icon: 'rice', packType: 'pack', packSize: 500, unit: 'g', daysPerPack: 30, storage: 'cupboard' });
+    await saveProduct({ name: 'Кус-кус', icon: 'pasta', packType: 'pack', packSize: 500, unit: 'g', daysPerPack: 30, storage: 'cupboard' }); // вибрано вручну
+    const rules = [{ from: 'rice', to: 'grain', match: ['булгур', 'кус'] }];
+    expect(await migrateIcons(rules)).toBe(1);
+    const { products } = await loadAll();
+    expect(products.find((p) => p.name === 'Булгур').icon).toBe('grain');
+    expect(products.find((p) => p.name === 'Кус-кус').icon).toBe('pasta');
+    expect(await migrateIcons(rules)).toBe(0);
+  });
+});

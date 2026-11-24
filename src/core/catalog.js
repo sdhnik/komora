@@ -11,7 +11,8 @@ const C = (k, icon, packType, packSize, unit, lasts, storage, shelf = undefined,
 
 export const CATALOG = [
   // молочне
-  C('кефір ряжан йогурт', 'milk', 'bottle', 1, 'l', '2-3d', 'fridge', 7),
+  C('йогурт', 'bowl', 'package', 500, 'g', 'week', 'fridge', 14),
+  C('кефір ряжан', 'milk', 'bottle', 1, 'l', '2-3d', 'fridge', 7),
   C('молок', 'milk', 'bottle', 1, 'l', '2-3d', 'fridge', 7),
   C('вершк', 'milk', 'package', 200, 'ml', 'week', 'fridge', 7),
   C('сметан', 'milk', 'jar', 350, 'g', 'week', 'fridge', 10),
@@ -27,9 +28,9 @@ export const CATALOG = [
   C('круасан булк випічк', 'croissant', 'package', 4, 'pcs', '2-3d', 'cupboard', 4),
   C('гречк', 'rice', 'pack', 1, 'kg', '2w', 'cupboard', null),
   C('рис', 'rice', 'pack', 1, 'kg', '2w', 'cupboard', null),
-  C('булгур кус пшон перлов кукурудзян', 'rice', 'pack', 500, 'g', '2w', 'cupboard', null),
-  C('вівсян пластівц гранол мюслі', 'rice', 'pack', 500, 'g', '2w', 'cupboard', null),
-  C('борошн', 'rice', 'pack', 1, 'kg', 'month', 'cupboard', null),
+  C('булгур кус кіноа пшон перлов кукурудзян', 'grain', 'pack', 500, 'g', '2w', 'cupboard', null),
+  C('вівсян пластівц гранол мюслі', 'bowl', 'pack', 500, 'g', '2w', 'cupboard', null),
+  C('борошн', 'grain', 'pack', 1, 'kg', 'month', 'cupboard', null),
   C('макарон спагеті паст локшин', 'pasta', 'pack', 500, 'g', '2w', 'cupboard', null),
   // м'ясо і риба
   C('фарш', 'meat', 'weight', 500, 'g', 'week', 'freezer', 90),
@@ -76,8 +77,10 @@ export const CATALOG = [
   // консерви і бобові
   C('тунець консерв', 'canned', 'jar', 1, 'pcs', 'week', 'cupboard', null),
   C('нут квасол сочевиц горох', 'beans', 'pack', 500, 'g', 'month', 'cupboard', null),
-  C('пасата passata соус томатн', 'jar', 'package', 700, 'g', 'week', 'cupboard', null),
+  C('пасата passata томатн', 'tomato', 'package', 700, 'g', 'week', 'cupboard', null),
+  C('соус', 'jar', 'bottle', 250, 'ml', 'month', 'cupboard', null),
   // солодке і бакалія
+  C('сироп', 'maple', 'bottle', 250, 'ml', 'month', 'cupboard', null),
   C('мед', 'honey', 'jar', 400, 'g', 'month', 'cupboard', null),
   C('варенн джем', 'honey', 'jar', 300, 'g', 'month', 'fridge', 60),
   C('шоколад цукерк', 'choco', 'pack', 100, 'g', 'week', 'cupboard', null),
