@@ -172,7 +172,8 @@ export async function importBackup(data) {
   await tx.objectStore('meta').delete('syncState');
   for (const p of data.products) await tx.objectStore('products').put(p);
   for (const e of data.events) await tx.objectStore('events').put(e);
-  await tx.objectStore('meta').put({ ...DEFAULT_SETTINGS, ...data.settings, syncKey: current.syncKey || '' }, 'settings');
+  // підключення до таблиці лишається тим, що є на цьому телефоні
+  await tx.objectStore('meta').put({ ...DEFAULT_SETTINGS, ...data.settings, syncUrl: current.syncUrl || '', syncKey: current.syncKey || '' }, 'settings');
   await tx.done;
 }
 

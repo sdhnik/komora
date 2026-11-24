@@ -44,8 +44,11 @@ function ItemCard({ x, packs, setPacks, onBuy, onOpen, entering }) {
         <Tile icon={p.icon} />
         <div class="item-main">
           <div>
-            <div class="item-name"><b>{p.name}</b>{x.state.status === 'learning' && <span class="badge">приблизно</span>}</div>
-            <div class={`days ${isUrgent(x.days) ? 'urgent' : ''}`}>{daysLabel(x.days)}</div>
+            <div class="item-name"><b>{p.name}</b></div>
+            <div class="days-row">
+              {x.state.status === 'learning' && <span class="badge approx" title="Приблизно: програма ще вчиться" aria-label="приблизно">≈</span>}
+              <span class={`days ${isUrgent(x.days) ? 'urgent' : ''}`}>{daysLabel(x.days)}</span>
+            </div>
           </div>
           <div class="pack"><b>{bold}</b><span>{grey}</span></div>
         </div>

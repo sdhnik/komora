@@ -186,6 +186,8 @@ describe('словник', () => {
     expect(guessProduct('Фарш баранячий')).toMatchObject({ packType: 'weight', packSize: 500, unit: 'g', storage: 'freezer', shelfLifeDays: 90 });
     expect(guessProduct('Банани')).toMatchObject({ packType: 'piece', perWeek: 7 });
     expect(guessProduct('Олія соняшникова')).toMatchObject({ icon: 'olive', packType: 'bottle' });
+    expect(guessProduct('Перець солодкий')).toMatchObject({ icon: 'pepper', packType: 'piece' });
+    expect(guessProduct('Тортильї цільнозернові')).toMatchObject({ icon: 'flatbread' });
     expect(guessProduct('Ополіскувач для білизни')).toMatchObject({ known: true, icon: 'lotion' });
   });
   it('невідомий товар отримує запасні відповіді', () => {

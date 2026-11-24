@@ -204,9 +204,12 @@ export function App() {
     },
     restoreFile: async (backup) => {
       await importBackup(backup);
-      await saveSettings({ ...(await loadAll()).settings, welcomed: true });
+      const restored = (await loadAll()).settings;
+      await saveSettings({ ...restored, welcomed: true });
+      if (restored.syncUrl) await enqueueAll(); // відновлене має дійти й до таблиці
       await reload();
       showToast('Дані відновлено');
+      runSync();
     },
     wipe: async () => {
       await importBackup({ app: 'komora', products: [], events: [], settings: { ...data.settings, welcomed: false } });
