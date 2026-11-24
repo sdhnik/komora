@@ -38,6 +38,16 @@ function setup() {
   Logger.log('Ключ для Komora: ' + key);
 }
 
+/** Стирає всі товари й події (заголовки лишаються). Запускайте вручну з редактора. */
+function clearData() {
+  const ss = SpreadsheetApp.getActive();
+  Object.keys(SHEETS).forEach(function (name) {
+    const sheet = ss.getSheetByName(name);
+    if (sheet && sheet.getLastRow() > 1) sheet.deleteRows(2, sheet.getLastRow() - 1);
+  });
+  Logger.log('Таблицю очищено');
+}
+
 /** Коли ви правите товар у таблиці вручну, оновлюємо updatedAt, щоб правка дійшла до телефона. */
 function onEdit(e) {
   const sheet = e.range.getSheet();

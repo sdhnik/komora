@@ -165,9 +165,11 @@ export async function importBackup(data) {
   }
   const db = await openKomora();
   const current = (await db.get('meta', 'settings')) || {};
-  const tx = db.transaction(['products', 'events', 'meta'], 'readwrite');
+  const tx = db.transaction(['products', 'events', 'meta', 'outbox'], 'readwrite');
   await tx.objectStore('products').clear();
   await tx.objectStore('events').clear();
+  await tx.objectStore('outbox').clear(); // стара черга не повинна піти в таблицю
+  await tx.objectStore('meta').delete('syncState');
   for (const p of data.products) await tx.objectStore('products').put(p);
   for (const e of data.events) await tx.objectStore('events').put(e);
   await tx.objectStore('meta').put({ ...DEFAULT_SETTINGS, ...data.settings, syncKey: current.syncKey || '' }, 'settings');

@@ -46,3 +46,13 @@ describe('сховище', () => {
     await expect(importBackup({ foo: 1 })).rejects.toThrow('Komora');
   });
 });
+
+describe('видалення всіх даних', () => {
+  it('очищає і чергу синхронізації', async () => {
+    await saveProduct({ name: 'Гречка', packType: 'pack', packSize: 1, unit: 'kg', daysPerPack: 14, storage: 'cupboard' });
+    const { pendingCount } = await import('../src/db.js');
+    expect(await pendingCount()).toBe(2);
+    await importBackup({ app: 'komora', products: [], events: [], settings: {} });
+    expect(await pendingCount()).toBe(0);
+  });
+});
