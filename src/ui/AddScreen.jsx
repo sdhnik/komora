@@ -102,11 +102,13 @@ export function AddScreen({ data, act, back }) {
             : <span class="reason">Не впізнав, перевірте відповіді</span>}
         />
         <div class="wizard-foot">
-          <button class="btn-ghost" disabled={idx === 0} style={{ color: idx === 0 ? 'rgba(20,20,20,.3)' : undefined }} onClick={() => setIdx(idx - 1)}>Назад</button>
-          <button class="skip" onClick={() => go(true)}>Пропустити</button>
-          <button class="btn-big" style={{ height: '52px', fontSize: '16px', borderRadius: '16px', flex: 1 }} onClick={() => go(false)}>
+          <button class="btn-big" style={{ height: '52px', fontSize: '16px', borderRadius: '16px' }} onClick={() => go(false)}>
             {idx === queue.length - 1 ? 'Готово' : 'Далі'}
           </button>
+          <div class="two">
+            <button class="skip" disabled={idx === 0} style={{ color: idx === 0 ? 'rgba(20,20,20,.3)' : undefined }} onClick={() => setIdx(idx - 1)}>Назад</button>
+            <button class="skip" onClick={() => go(true)}>Пропустити</button>
+          </div>
         </div>
         {picker && <IconPicker name={cur.name} current={cur.icon} onClose={() => setPicker(false)} onPick={(icon) => { setCur({ icon }); setPicker(false); }} />}
       </main>

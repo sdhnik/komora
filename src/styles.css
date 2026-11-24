@@ -259,8 +259,8 @@ img { display: block; }
 .name-field { display: flex; flex-direction: column; gap: 4px; }
 .name-field span { font-size: 12px; color: var(--muted); }
 .name-field input { height: 44px; border: 0; border-radius: 12px; background: var(--soft); padding: 0 12px; font-size: 18px; font-weight: 600; width: 100%; }
-.wizard-foot { display: flex; gap: 8px; align-items: center; padding-top: 8px; margin-top: auto; }
-.wizard-foot .skip { border: 0; background: rgba(255, 255, 255, .7); border-radius: 16px; height: 52px; padding: 0 14px; font-size: 15px; font-weight: 600; color: var(--ink-2); }
+.wizard-foot { display: flex; flex-direction: column; gap: 8px; margin: auto -16px calc(-28px - var(--safe-b)); padding: 14px 16px calc(14px + var(--safe-b)); position: sticky; bottom: 0; z-index: 5; background: linear-gradient(to bottom, rgba(244, 241, 230, 0), rgba(244, 241, 230, .96) 22%); }
+.wizard-foot .skip { border: 0; background: rgba(255, 255, 255, .7); border-radius: 16px; height: 48px; padding: 0 14px; font-size: 15px; font-weight: 600; color: var(--ink-2); }
 .list-rows .sub { display: block; font-size: 12px; color: var(--muted); font-weight: 400; }
 button:disabled { cursor: default; }
 
