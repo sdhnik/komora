@@ -101,6 +101,17 @@ describe('навчання', () => {
     expect(st.cycles).toBe(1); // лічильник скинуто, і цикл-промах уже зарахований як перший новий
   });
 
+  it('повернення з архіву (нова подія added) починає навчання з нуля', () => {
+    const events = [
+      ev('b', '2026-10-01', 'bought', 1), ev('b', '2026-10-15', 'ranOut'),
+      ev('b', '2026-10-15', 'bought', 1), ev('b', '2026-10-29', 'ranOut'),
+      ev('b', '2026-11-20', 'added'),
+    ];
+    const st = replay(buckwheat, events, '2026-11-20');
+    expect(st.status).toBe('learning');
+    expect(st.stock).toBeNull();
+  });
+
   it('проміжок коротший за 3 дні норму не змінює', () => {
     const events = [ev('b', '2026-10-01', 'bought', 1), ev('b', '2026-10-02', 'ranOut')];
     expect(replay(buckwheat, events, '2026-10-02').rate).toBeCloseTo(1 / 14);

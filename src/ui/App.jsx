@@ -1,77 +1,148 @@
-// Тимчасовий екран етапу 1: показує, що ядро і сховище працюють.
-// На етапі 2 його замінять справжні екрани з макетів.
-
-import { useEffect, useState } from 'preact/hooks';
-import { loadAll, saveProduct, addEvent, importBackup } from '../db.js';
-import { buildWeek } from '../core/model.js';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup } from '../db.js';
+import { buildWeek, replay, forecast } from '../core/model.js';
 import { todayISO, addDays } from '../core/dates.js';
+import { seedDemo } from '../dev/seed.js';
+import { TabBar, Toast } from './components.jsx';
+import { ListScreen } from './ListScreen.jsx';
+import { CheckScreen } from './CheckScreen.jsx';
+import { StockScreen } from './StockScreen.jsx';
+import { ProductScreen } from './ProductScreen.jsx';
+import { SettingsScreen } from './SettingsScreen.jsx';
 
-const REASON = { unknown: 'залишок невідомий', learning: 'ще вчиться', overdue: 'давно не купували' };
-const GROUP = { now: 'Цього тижня', next: 'Наступного тижня', stock: 'Є запас' };
-const fmtDays = (d) => (d === null ? '?' : `${Math.round(d)} дн.`);
-
-async function seedDemo() {
-  const t = todayISO();
-  const demo = [
-    [{ name: 'Гречка', icon: 'rice', packType: 'pack', packSize: 1, unit: 'kg', daysPerPack: 14, storage: 'cupboard', shelfLifeDays: null }, [[-30, 'bought', 1], [-16, 'ranOut'], [-15, 'bought', 1]]],
-    [{ name: 'Молоко', icon: 'milk', packType: 'bottle', packSize: 1, unit: 'l', daysPerPack: 2.5, storage: 'fridge', shelfLifeDays: 7 }, [[-6, 'bought', 3]]],
-    [{ name: 'Кава мелена', icon: 'coffee', packType: 'pack', packSize: 250, unit: 'g', daysPerPack: 14, storage: 'cupboard', shelfLifeDays: null }, [[-4, 'bought', 1]]],
-    [{ name: 'Банани', icon: 'banana', packType: 'piece', packSize: 1, unit: 'pcs', perWeek: 10, storage: 'cupboard', shelfLifeDays: 7 }, [[-3, 'bought', 6]]],
-    [{ name: 'Фарш баранячий', icon: 'meat', packType: 'weight', packSize: 500, unit: 'g', daysPerPack: 7, storage: 'freezer', shelfLifeDays: 90 }, []],
-  ];
-  for (const [fields, evs] of demo) {
-    const p = await saveProduct(fields, { addedDate: addDays(t, -31) });
-    for (const [shift, type, value] of evs) await addEvent(p.id, type, value ?? null, addDays(t, shift));
-  }
-}
+// Маршрут: вкладка (list | stock) + необов'язковий екран поверх неї.
+// Екрани поверх кладуться в history, тож системна кнопка «назад» на Android працює.
+const initialRoute = () => history.state?.route ?? { tab: 'list' };
 
 export function App() {
   const [data, setData] = useState(null);
-  const reload = () => loadAll().then(setData);
-  useEffect(() => { reload(); }, []);
+  const [pending, setPending] = useState(0);
+  const [route, setRoute] = useState(initialRoute);
+  const [toast, setToast] = useState(null);
+  const [today, setToday] = useState(todayISO());
+  const timer = useRef(null);
 
-  if (!data) return <main class="dev"><p class="sub">Завантаження…</p></main>;
+  const reload = async () => {
+    const [d, n] = await Promise.all([loadAll(), pendingCount()]);
+    setData(d);
+    setPending(n);
+    setToday(todayISO());
+  };
 
-  const w = buildWeek(data.products, data.events, data.settings, todayISO());
+  useEffect(() => {
+    reload();
+    const onPop = (e) => setRoute(e.state?.route ?? { tab: 'list' });
+    const onVisible = () => document.visibilityState === 'visible' && reload();
+    window.addEventListener('popstate', onPop);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
 
+  const week = useMemo(() => data && buildWeek(data.products, data.events, data.settings, today), [data, today]);
+
+  // Що куплено в цей похід: з суботи перед днем покупок, а посеред тижня — за сьогодні.
+  const session = useMemo(() => {
+    if (!week) return [];
+    const eve = addDays(week.trip, -1);
+    const start = today < eve ? today : eve;
+    const out = [];
+    for (const x of week.items) {
+      const buys = x.state.history.filter((e) => e.type === 'bought' && e.date >= start);
+      if (buys.length) out.push({ ...x, event: buys[buys.length - 1] });
+    }
+    return out;
+  }, [week, today]);
+
+  const navigate = (next) => {
+    history.pushState({ route: next }, '');
+    setRoute(next);
+    window.scrollTo(0, 0);
+  };
+  const open = (screen, extra = {}) => navigate({ tab: route.tab, screen, ...extra });
+  const back = () => (history.state?.route?.screen ? history.back() : setRoute({ tab: route.tab }));
+  const setTab = (tab) => {
+    history.replaceState({ route: { tab } }, '');
+    setRoute({ tab });
+    window.scrollTo(0, 0);
+  };
+
+  const showToast = (text, undo) => {
+    clearTimeout(timer.current);
+    setToast({ text, undo });
+    timer.current = setTimeout(() => setToast(null), 6000);
+  };
+  const withUndo = (text, ev) =>
+    showToast(text, async () => {
+      clearTimeout(timer.current);
+      setToast(null);
+      await undoEvent(ev);
+      reload();
+    });
+
+  const act = {
+    buy: async (p, packs) => {
+      if (navigator.vibrate) navigator.vibrate(15);
+      const ev = await addEvent(p.id, 'bought', packs);
+      await reload();
+      withUndo(`Куплено: ${p.name}`, ev);
+    },
+    undo: async (ev) => { await undoEvent(ev); reload(); },
+    answer: async (p, value) => { await addEvent(p.id, 'checked', value); await reload(); },
+    ranOut: async (p) => {
+      const ev = await addEvent(p.id, 'ranOut');
+      await reload();
+      withUndo(`${p.name}: додано в список`, ev);
+    },
+    refine: async (p, value) => {
+      const ev = await addEvent(p.id, 'checked', value);
+      await reload();
+      withUndo('Залишок уточнено', ev);
+    },
+    archive: async (p, archived) => {
+      await saveProduct({ ...p, archived });
+      if (!archived) await addEvent(p.id, 'added'); // повернений товар вчиться заново
+      await reload();
+      showToast(archived ? `${p.name}: в архіві` : `${p.name}: повернуто`);
+    },
+    remove: async (p) => {
+      await deleteProduct(p.id);
+      back();
+      await reload();
+      showToast(`${p.name}: видалено`);
+    },
+    later: (what) => showToast(what),
+    seed: async () => { await seedDemo(); await reload(); },
+    wipe: async () => { await importBackup({ app: 'komora', products: [], events: [], settings: data.settings }); await reload(); },
+  };
+
+  if (!data || !week) return null;
+
+  const itemFor = (id) => {
+    const found = week.items.find((x) => x.product.id === id);
+    if (found) return found;
+    const p = data.products.find((x) => x.id === id);
+    if (!p) return null;
+    const state = replay(p, data.events, today);
+    return { product: p, state, ...forecast(p, state, data.settings, today) };
+  };
+
+  const common = { week, data, today, pending, act, open, back };
+  let screen;
+  if (route.screen === 'check') screen = <CheckScreen {...common} />;
+  else if (route.screen === 'product') screen = <ProductScreen {...common} item={itemFor(route.id)} />;
+  else if (route.screen === 'settings') screen = <SettingsScreen {...common} />;
+  else if (route.tab === 'stock') screen = <StockScreen {...common} />;
+  else screen = <ListScreen {...common} session={session} />;
+
+  const tabs = !route.screen;
   return (
-    <main class="dev">
-      <h1>Komora</h1>
-      <p class="sub">Етап 1: ядро працює. Покупка {w.trip}, горизонт {w.H} дн. Програма знає {w.known} з {w.total}.</p>
-
-      <div class="actions">
-        <button class="btn" onClick={async () => { await seedDemo(); reload(); }}>Додати приклад</button>
-        <button class="btn alt" onClick={async () => { await importBackup({ app: 'komora', products: [], events: [], settings: data.settings }); reload(); }}>Очистити</button>
-      </div>
-
-      <h2>Перевірка · {w.check.length}</h2>
-      <div class="card">
-        {w.check.length === 0 && <small>Нічого перевіряти</small>}
-        {w.check.map((x) => (
-          <div class="row" key={x.product.id}>
-            <span>{x.product.name}</span>
-            <small>{REASON[x.checkReason]}</small>
-          </div>
-        ))}
-      </div>
-
-      {['now', 'next', 'stock'].map((g) => (
-        <section key={g}>
-          <h2>{GROUP[g]} · {w.groups[g].length}</h2>
-          <div class="card">
-            {w.groups[g].length === 0 && <small>Порожньо</small>}
-            {w.groups[g].map((x) => (
-              <div class="row" key={x.product.id}>
-                <span>{x.product.name} <small>{x.state.status === 'learning' ? '· вчиться' : ''}</small></span>
-                <span>
-                  <small>{fmtDays(x.days)}</small>{' '}
-                  {g === 'now' && <button class="btn" style="height:32px;padding:0 10px" onClick={async () => { await addEvent(x.product.id, 'bought', x.packs); reload(); }}>Купив ×{x.packs}</button>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-    </main>
+    <>
+      {screen}
+      {tabs && <TabBar tab={route.tab} onTab={setTab} />}
+      <Toast toast={toast} low={!tabs} />
+    </>
   );
 }

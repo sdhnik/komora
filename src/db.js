@@ -32,6 +32,9 @@ export async function _reset() {
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
 const now = () => new Date().toISOString();
+// Монотонний порядок запису: події в межах однієї мілісекунди не плутаються.
+let lastSeq = 0;
+const nextSeq = () => { let n = Date.now() * 1000; if (n <= lastSeq) n = lastSeq + 1; lastSeq = n; return n; };
 
 export async function loadAll() {
   const db = await openKomora();
@@ -40,14 +43,14 @@ export async function loadAll() {
     db.getAll('events'),
     db.get('meta', 'settings'),
   ]);
-  events.sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
+  events.sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0) || (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
   return { products, events, settings: { ...DEFAULT_SETTINGS, ...settings } };
 }
 
 /** Записує подію і ставить її в чергу на синхронізацію. Повертає подію. */
 export async function addEvent(productId, type, value = null, date = todayISO()) {
   const db = await openKomora();
-  const event = { id: uid(), productId, date, type, value, createdAt: now() };
+  const event = { id: uid(), productId, date, type, value, createdAt: now(), seq: nextSeq() };
   const tx = db.transaction(['events', 'outbox'], 'readwrite');
   await Promise.all([
     tx.objectStore('events').put(event),

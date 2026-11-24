@@ -69,7 +69,9 @@ export function replay(product, events, today) {
   for (const e of evs) {
     lastType = e.type;
     if (e.type === 'added') {
+      // новий товар або повернений з архіву: залишок невідомий, навчання з нуля (норма лишається)
       S = null; t = e.date; anchor = null; cycle = null;
+      status = 'learning'; cycles = 0; misses = 0;
     } else if (e.type === 'bought') {
       decay(e.date);
       S = (S ?? 0) + (Number(e.value) || 1) * product.packSize;
