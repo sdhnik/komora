@@ -78,7 +78,7 @@ export function ListScreen({ week, data, pending, sync, session, act, open }) {
       <Head
         left={<SyncButton pending={pending} connected={!!data.settings.syncUrl} status={sync.status} onClick={() => (data.settings.syncUrl ? act.syncNow() : open('settings'))} />}
         title="Список"
-        sub={longDate(week.trip)}
+        sub={longDate(week.today)}
         right={<button class="round" aria-label="Налаштування" onClick={() => open('settings')}><Ico name="gear" /></button>}
       />
 
