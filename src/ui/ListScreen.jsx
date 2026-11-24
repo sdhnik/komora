@@ -104,12 +104,12 @@ export function ListScreen({ week, data, pending, session, act, open }) {
 
       {empty && (
         <div class="card empty">
-          Поки немає товарів.<br />Додавання з’явиться на етапі 3, а поки можна завантажити приклад.
-          <div style={{ marginTop: '14px' }}><button class="btn" onClick={act.seed}>Додати приклад</button></div>
+          Поки немає товарів.
+          <div style={{ marginTop: '14px' }}><button class="btn" onClick={() => open('add')}>Додати товари</button></div>
         </div>
       )}
       {!empty && list.length === 0 && (
-        <div class="card empty">{session.length ? 'Усе куплено. До наступної неділі!' : 'Цього тижня купувати нічого не треба.'}</div>
+        <div class="card empty">{session.length ? 'Усе куплено. До наступної неділі!' : week.check.length ? 'Спершу пройдіть Перевірку: після неї тут з’явиться список.' : 'Цього тижня купувати нічого не треба.'}</div>
       )}
 
       {session.length > 0 && (

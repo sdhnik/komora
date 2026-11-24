@@ -14,7 +14,7 @@ function describe(e, p, today) {
   return { date, title: e.type, note: '' };
 }
 
-export function ProductScreen({ item, today, act, back }) {
+export function ProductScreen({ item, today, act, back, open }) {
   const [menu, setMenu] = useState(false);
   const [refine, setRefine] = useState(false);
   const [sure, setSure] = useState(false);
@@ -46,7 +46,7 @@ export function ProductScreen({ item, today, act, back }) {
         />
         {menu && (
           <div class="menu">
-            <button onClick={() => { setMenu(false); act.later('Редагування з’явиться на етапі 3'); }}><Ico name="edit" size={18} width={1.8} />Редагувати</button>
+            <button onClick={() => { setMenu(false); open('edit', { id: p.id }); }}><Ico name="edit" size={18} width={1.8} />Редагувати</button>
             {!p.archived && <button onClick={() => { setMenu(false); act.archive(p, true); }}><Ico name="archive" size={18} width={1.8} />В архів</button>}
             {p.archived && <button onClick={() => { setMenu(false); act.archive(p, false); }}><Ico name="archive" size={18} width={1.8} />Повернути з архіву</button>}
             {p.archived && (

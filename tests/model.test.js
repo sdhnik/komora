@@ -175,3 +175,24 @@ describe('тиждень цілком', () => {
     expect(w.known).toBe(0);
   });
 });
+
+import { guessProduct } from '../src/core/catalog.js';
+import { matchIcon } from '../src/core/icons.js';
+
+describe('словник', () => {
+  it('впізнає типові товари', () => {
+    expect(guessProduct('Кефір 2,5%')).toMatchObject({ known: true, icon: 'milk', packType: 'bottle', storage: 'fridge' });
+    expect(guessProduct('Хліб цільнозерновий')).toMatchObject({ icon: 'bread', packType: 'loaf' });
+    expect(guessProduct('Фарш баранячий')).toMatchObject({ packType: 'weight', packSize: 500, unit: 'g', storage: 'freezer', shelfLifeDays: 90 });
+    expect(guessProduct('Банани')).toMatchObject({ packType: 'piece', perWeek: 7 });
+    expect(guessProduct('Олія соняшникова')).toMatchObject({ icon: 'olive', packType: 'bottle' });
+    expect(guessProduct('Ополіскувач для білизни')).toMatchObject({ known: true, icon: 'lotion' });
+  });
+  it('невідомий товар отримує запасні відповіді', () => {
+    expect(guessProduct('Корм для кота')).toMatchObject({ known: false, icon: 'cart', packType: 'package' });
+  });
+  it('іконка шукається за ключовими словами', () => {
+    expect(matchIcon('Помідори черрі')).toBe('tomato');
+    expect(matchIcon('щось')).toBeNull();
+  });
+});

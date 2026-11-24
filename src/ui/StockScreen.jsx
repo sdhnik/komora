@@ -57,7 +57,7 @@ export function StockScreen({ week, data, pending, act, open }) {
           <Ico name="search" size={18} color="#6E736F" width={2} />
           <input type="search" placeholder="Пошук" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
         </label>
-        <button class="round dark" aria-label="Додати товари" onClick={() => act.later('Додавання товарів з’явиться на етапі 3')}>
+        <button class="round dark" aria-label="Додати товари" onClick={() => open('add')}>
           <Ico name="plus" size={18} color="#fff" width={2.2} />
         </button>
       </div>
@@ -86,7 +86,7 @@ export function StockScreen({ week, data, pending, act, open }) {
       {week.total === 0 && !query && (
         <div class="card empty">
           Поки немає товарів.
-          <div style={{ marginTop: '14px' }}><button class="btn" onClick={act.seed}>Додати приклад</button></div>
+          <div style={{ marginTop: '14px' }}><button class="btn" onClick={() => open('add')}>Додати товари</button></div>
         </div>
       )}
       {query && groups.length === 0 && <div class="card empty">Нічого не знайдено</div>}

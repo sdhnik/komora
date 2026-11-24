@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup } from '../db.js';
+import { loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, saveSettings } from '../db.js';
 import { buildWeek, replay, forecast } from '../core/model.js';
 import { todayISO, addDays } from '../core/dates.js';
 import { seedDemo } from '../dev/seed.js';
@@ -9,6 +9,9 @@ import { CheckScreen } from './CheckScreen.jsx';
 import { StockScreen } from './StockScreen.jsx';
 import { ProductScreen } from './ProductScreen.jsx';
 import { SettingsScreen } from './SettingsScreen.jsx';
+import { AddScreen } from './AddScreen.jsx';
+import { EditScreen } from './EditScreen.jsx';
+import { WelcomeScreen } from './WelcomeScreen.jsx';
 
 // Маршрут: вкладка (list | stock) + необов'язковий екран поверх неї.
 // Екрани поверх кладуться в history, тож системна кнопка «назад» на Android працює.
@@ -114,6 +117,26 @@ export function App() {
       showToast(`${p.name}: видалено`);
     },
     later: (what) => showToast(what),
+    addProducts: async (list) => {
+      for (const fields of list) await saveProduct(fields);
+      await reload();
+    },
+    saveEdit: async (p, fields) => {
+      await saveProduct({ ...p, ...fields });
+      await reload();
+      showToast('Збережено');
+    },
+    startFresh: async () => {
+      await saveSettings({ ...data.settings, welcomed: true });
+      await reload();
+      navigate({ tab: 'list', screen: 'add' });
+    },
+    restoreFile: async (backup) => {
+      await importBackup(backup);
+      await saveSettings({ ...(await loadAll()).settings, welcomed: true });
+      await reload();
+      showToast('Дані відновлено');
+    },
     seed: async () => { await seedDemo(); await reload(); },
     wipe: async () => { await importBackup({ app: 'komora', products: [], events: [], settings: data.settings }); await reload(); },
   };
@@ -131,7 +154,17 @@ export function App() {
 
   const common = { week, data, today, pending, act, open, back };
   let screen;
-  if (route.screen === 'check') screen = <CheckScreen {...common} />;
+  if (!data.settings.welcomed && data.products.length === 0 && route.screen !== 'add') {
+    return (
+      <>
+        <WelcomeScreen act={act} />
+        <Toast toast={toast} low />
+      </>
+    );
+  }
+  if (route.screen === 'add') screen = <AddScreen {...common} />;
+  else if (route.screen === 'edit') screen = <EditScreen {...common} key={route.id} item={itemFor(route.id)} />;
+  else if (route.screen === 'check') screen = <CheckScreen {...common} />;
   else if (route.screen === 'product') screen = <ProductScreen {...common} item={itemFor(route.id)} />;
   else if (route.screen === 'settings') screen = <SettingsScreen {...common} />;
   else if (route.tab === 'stock') screen = <StockScreen {...common} />;

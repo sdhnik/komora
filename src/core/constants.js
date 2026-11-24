@@ -14,7 +14,7 @@ export const UNITS = ['g', 'kg', 'ml', 'l', 'pcs'];
 export const STORAGES = ['cupboard', 'fridge', 'freezer'];
 export const EVENT_TYPES = ['added', 'bought', 'checked', 'ranOut', 'undone'];
 
-export const DEFAULT_SETTINGS = { shoppingDay: 7, bufferDays: 1, syncUrl: '', syncKey: '', lastBackupAt: null };
+export const DEFAULT_SETTINGS = { shoppingDay: 7, bufferDays: 1, syncUrl: '', syncKey: '', lastBackupAt: null, welcomed: false };
 
 /** Навчання. */
 export const LEARN = {
