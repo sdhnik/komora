@@ -3,7 +3,7 @@
 // lasts — на скільки вистачає однієї упаковки: '2-3d' | 'week' | '2w' | 'month' | 'longer'.
 // Для piece замість lasts — perWeek (штук на тиждень). shelf — термін зберігання, днів (null = без обмежень).
 
-import { matchIcon, FALLBACK_ICON } from './icons.js';
+import { matchIcon, hasIcon, FALLBACK_ICON } from './icons.js';
 import { STORAGE_SHELF } from './constants.js';
 
 const C = (k, icon, packType, packSize, unit, lasts, storage, shelf = undefined, perWeek = undefined) =>
@@ -108,7 +108,7 @@ export function guessProduct(name) {
   if (hit) {
     const shelf = hit.shelf === undefined ? STORAGE_SHELF[hit.storage] : hit.shelf;
     return {
-      known: true, icon: hit.icon, packType: hit.packType, packSize: hit.packSize, unit: hit.unit,
+      known: true, icon: matchIcon(name) ?? (hasIcon(hit.icon) ? hit.icon : FALLBACK_ICON), packType: hit.packType, packSize: hit.packSize, unit: hit.unit,
       lasts: hit.lasts ?? 'week', perWeek: hit.perWeek ?? 7, storage: hit.storage, shelfLifeDays: shelf,
     };
   }

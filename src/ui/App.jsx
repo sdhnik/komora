@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { migrateIcons, loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, exportBackup, saveSettings, enqueueAll, getMeta } from '../db.js';
+import { migrateIconSet, loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, exportBackup, saveSettings, enqueueAll, getMeta } from '../db.js';
 import { syncNow, ping, resetSyncState } from '../sync.js';
+import { matchIcon, hasIcon } from '../core/icons.js';
+import { legacyMatch } from '../core/icons-legacy.js';
 import { buildWeek, replay, forecast, boughtValue } from '../core/model.js';
 import { todayISO, addDays } from '../core/dates.js';
 import { TabBar, Toast } from './components.jsx';
@@ -16,6 +18,13 @@ import { WelcomeScreen } from './WelcomeScreen.jsx';
 // Маршрут: вкладка (list | stock) + необов'язковий екран поверх неї.
 // Екрани поверх кладуться в history, тож системна кнопка «назад» на Android працює.
 const initialRoute = () => history.state?.route ?? { tab: 'list' };
+
+// Старі загальні іконки → нові (якщо назва нічого точнішого не підказала).
+const RENAMED_ICONS = {
+  bowl: 'yogurt', curd: 'cottage_cheese', grain: 'rice', greens: 'lettuce', herb: 'herbs', berries: 'mixed_berries',
+  jar: 'passata', canned: 'canned_food', maple: 'maple_syrup', sweetpotato: 'sweet_potato',
+  poultry: 'poultry', meat: 'meat', fish: 'fish', salt: 'salt', olive: 'olive', rice: 'rice', beans: 'beans', nuts: 'nuts', croissant: 'croissant', grapes: 'grapes', tomato: 'tomato', honey: 'honey', pasta: 'pasta',
+};
 
 export function App() {
   const [data, setData] = useState(null);
@@ -58,17 +67,7 @@ export function App() {
   };
 
   useEffect(() => {
-    migrateIcons([
-      { from: 'milk', to: 'bowl', match: ['йогурт'] },
-      { from: 'rice', to: 'bowl', match: ['вівсян', 'пластівц', 'гранол', 'мюслі'] },
-      { from: 'rice', to: 'grain', match: ['кус', 'кіноа', 'булгур', 'пшон', 'борошн'] },
-      { from: 'honey', to: 'maple', match: ['сироп'] },
-      { from: 'jar', to: 'tomato', match: ['пасата', 'passata'] },
-    ])
-      .then(() => migrateIcons([
-        { from: 'cucumber', to: 'zucchini', match: ['кабач', 'цукіні'] },
-        { from: 'cheese', to: 'curd', match: ['кисломол', 'творог', 'сирн'] },
-      ], 'migr-icons-2'))
+    migrateIconSet('migr-icons-3', { match: matchIcon, legacyMatch, hasIcon, renamed: RENAMED_ICONS })
       .catch(() => {}).then(() => reload()).then(() => runSync());
     getMeta('syncState').then((m) => m?.lastSync && setSync((x) => ({ ...x, lastSync: m.lastSync, eventsTotal: m.eventsCount })));
     const onPop = (e) => setRoute(e.state?.route ?? { tab: 'list' });

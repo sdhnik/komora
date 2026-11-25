@@ -181,11 +181,11 @@ import { matchIcon } from '../src/core/icons.js';
 
 describe('словник', () => {
   it('впізнає типові товари', () => {
-    expect(guessProduct('Кефір 2,5%')).toMatchObject({ known: true, icon: 'milk', packType: 'bottle', storage: 'fridge' });
+    expect(guessProduct('Кефір 2,5%')).toMatchObject({ known: true, icon: 'kefir', packType: 'bottle', storage: 'fridge' });
     expect(guessProduct('Хліб цільнозерновий')).toMatchObject({ icon: 'bread', packType: 'loaf' });
     expect(guessProduct('Фарш баранячий')).toMatchObject({ packType: 'weight', packSize: 500, unit: 'g', storage: 'freezer', shelfLifeDays: 90 });
     expect(guessProduct('Банани')).toMatchObject({ packType: 'piece', perWeek: 7 });
-    expect(guessProduct('Олія соняшникова')).toMatchObject({ icon: 'olive', packType: 'bottle' });
+    expect(guessProduct('Олія соняшникова')).toMatchObject({ icon: 'oil', packType: 'bottle' });
     expect(guessProduct('Перець солодкий')).toMatchObject({ icon: 'pepper', packType: 'piece' });
     expect(guessProduct('Тортильї цільнозернові')).toMatchObject({ icon: 'flatbread' });
     expect(guessProduct('Ополіскувач для білизни')).toMatchObject({ known: true, icon: 'lotion' });

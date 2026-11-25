@@ -58,15 +58,21 @@ describe('видалення всіх даних', () => {
 });
 
 describe('оновлення іконок', () => {
-  it('міняє лише стару автоматичну іконку і лише раз', async () => {
-    const { migrateIcons } = await import('../src/db.js');
-    await saveProduct({ name: 'Булгур', icon: 'rice', packType: 'pack', packSize: 500, unit: 'g', daysPerPack: 30, storage: 'cupboard' });
-    await saveProduct({ name: 'Кус-кус', icon: 'pasta', packType: 'pack', packSize: 500, unit: 'g', daysPerPack: 30, storage: 'cupboard' }); // вибрано вручну
-    const rules = [{ from: 'rice', to: 'grain', match: ['булгур', 'кус'] }];
-    expect(await migrateIcons(rules)).toBe(1);
+  it('переводить автоматичні й зниклі іконки на новий словник, ручні не чіпає, лише раз', async () => {
+    const { migrateIconSet } = await import('../src/db.js');
+    const { matchIcon, hasIcon } = await import('../src/core/icons.js');
+    const { legacyMatch } = await import('../src/core/icons-legacy.js');
+    const base = { packType: 'pack', packSize: 500, unit: 'g', daysPerPack: 30, storage: 'cupboard' };
+    await saveProduct({ ...base, name: 'Булгур', icon: 'grain' }); // стара автоматична
+    await saveProduct({ ...base, name: 'Кус-кус', icon: 'apple' }); // вибрано вручну
+    await saveProduct({ ...base, name: 'Щось своє', icon: 'jar' }); // іконки більше нема
+    const opts = { match: matchIcon, legacyMatch, hasIcon, renamed: { jar: 'passata' } };
+    expect(await migrateIconSet('k', opts)).toBe(2);
     const { products } = await loadAll();
-    expect(products.find((p) => p.name === 'Булгур').icon).toBe('grain');
-    expect(products.find((p) => p.name === 'Кус-кус').icon).toBe('pasta');
-    expect(await migrateIcons(rules)).toBe(0);
+    const icon = (n) => products.find((p) => p.name === n).icon;
+    expect(icon('Булгур')).toBe('bulgur');
+    expect(icon('Кус-кус')).toBe('apple');
+    expect(icon('Щось своє')).toBe('passata');
+    expect(await migrateIconSet('k', opts)).toBe(0);
   });
 });

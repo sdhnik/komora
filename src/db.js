@@ -106,17 +106,20 @@ export async function enqueueAll() {
   await tx.done;
 }
 
-/**
- * Одноразове оновлення іконок після розширення словника: міняємо лише ті,
- * що досі стоять на старій автоматичній іконці.
- */
-export async function migrateIcons(rules, key = 'migr-icons-1') {
+/** Перехід на новий словник іконок: оновлює автоматичні та зниклі іконки. */
+export async function migrateIconSet(key, { match, legacyMatch, hasIcon, renamed }) {
   const db = await openKomora();
   if (await db.get('meta', key)) return 0;
   let n = 0;
   for (const p of await db.getAll('products')) {
-    const rule = rules.find((r) => r.from === p.icon && r.match.some((k) => p.name.toLowerCase().includes(k)));
-    if (rule && !p.deleted) { await saveProduct({ ...p, icon: rule.to }); n++; }
+    if (p.deleted) continue;
+    const auto = match(p.name);
+    const gone = !hasIcon(p.icon);
+    const wasAuto = p.icon === legacyMatch(p.name) || renamed[p.icon] !== undefined;
+    let icon = p.icon;
+    if (auto && (gone || wasAuto)) icon = auto;
+    else if (gone) icon = renamed[p.icon] ?? 'cart';
+    if (icon !== p.icon) { await saveProduct({ ...p, icon }); n++; }
   }
   await db.put('meta', true, key);
   return n;
