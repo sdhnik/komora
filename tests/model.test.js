@@ -198,3 +198,18 @@ describe('словник', () => {
     expect(matchIcon('щось')).toBeNull();
   });
 });
+
+import { parseBought, boughtValue } from '../src/core/model.js';
+describe('розмір упаковки при покупці', () => {
+  const pasta = { id: 'p', packType: 'pack', packSize: 500, unit: 'g', daysPerPack: 10, storage: 'cupboard' };
+  it('зберігає розмір лише якщо він відрізняється', () => {
+    expect(boughtValue(2, 500, pasta)).toBe(2);
+    expect(boughtValue(2, 700, pasta)).toBe('2@700');
+    expect(parseBought('2@700', pasta)).toEqual({ packs: 2, size: 700 });
+    expect(parseBought(3, pasta)).toEqual({ packs: 3, size: 500 });
+  });
+  it('залишок рахується з фактичного розміру', () => {
+    const events = [{ id: 'a', productId: 'p', date: '2026-11-01', type: 'bought', value: '1@700' }];
+    expect(replay(pasta, events, '2026-11-01').stock).toBe(700);
+  });
+});

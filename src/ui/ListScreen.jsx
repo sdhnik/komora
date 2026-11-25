@@ -1,7 +1,9 @@
+import { parseBought } from '../core/model.js';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Head, Ico, SyncButton, Tile, Stepper } from './components.jsx';
 import { addDays } from '../core/dates.js';
-import { packLabel, daysLabel, isUrgent, boughtLabel, longDate, shortDate, plural } from './format.js';
+import { packLabel, daysLabel, isUrgent, boughtLabel, longDate, shortDate, plural, sizeEditable } from './format.js';
+import { SizeSheet } from './SizeSheet.jsx';
 
 function useLongPress(onLong, ms = 500) {
   const t = useRef(null);
@@ -23,19 +25,20 @@ const reduced = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').ma
  * Анімація покупки (специфікація, «Дизайн і анімації»):
  * 0–150 мс галочка, 150–400 мс пауза з перекресленою назвою, 400–650 мс картка виїжджає, решта підтягується.
  */
-function ItemCard({ x, packs, setPacks, onBuy, onOpen, entering }) {
+function ItemCard({ x, packs, size, setPacks, onBuy, onOpen, onSize, entering }) {
   const p = x.product;
   const [phase, setPhase] = useState(null); // null | 'check' | 'fade' | 'out'
   const press = useLongPress(onOpen);
-  const [bold, grey] = packLabel(p, packs);
+  const [bold, grey] = packLabel(p, packs, size);
+  const custom = size !== p.packSize;
   const buy = () => {
     if (press.fired.current || phase) return;
     if (navigator.vibrate) navigator.vibrate(15);
-    if (reduced()) { onBuy(p, packs); return; }
+    if (reduced()) { onBuy(p, packs, size); return; }
     setPhase('check');
     setTimeout(() => setPhase('fade'), 150);
     setTimeout(() => setPhase('out'), 400);
-    setTimeout(async () => { await onBuy(p, packs); setPhase(null); }, 650);
+    setTimeout(async () => { await onBuy(p, packs, size); setPhase(null); }, 650);
   };
   return (
     <div class={`slot ${phase === 'out' ? 'gone' : ''} ${entering ? 'enter' : ''}`}>
@@ -50,7 +53,13 @@ function ItemCard({ x, packs, setPacks, onBuy, onOpen, entering }) {
               <span class={`days ${isUrgent(x.days) ? 'urgent' : ''}`}>{daysLabel(x.days)}</span>
             </div>
           </div>
-          <div class="pack"><b>{bold}</b><span>{grey}</span></div>
+          {sizeEditable(p) ? (
+            <button class={`pack pack-btn ${custom ? 'custom' : ''}`} onClick={onSize} aria-label={`Розмір упаковки: ${bold}${grey}`}>
+              <b>{bold}</b><span>{grey}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+            </button>
+          ) : (
+            <div class="pack"><b>{bold}</b><span>{grey}</span></div>
+          )}
         </div>
         <div class="item-side">
           <button class={`circle ${phase ? 'done' : ''}`} aria-label={`Куплено: ${p.name}`} onClick={buy}>
@@ -65,6 +74,18 @@ function ItemCard({ x, packs, setPacks, onBuy, onOpen, entering }) {
 
 export function ListScreen({ week, data, pending, sync, session, act, open }) {
   const [packsFor, setPacksFor] = useState({});
+  const [sizeFor, setSizeFor] = useState({});
+  const [sizing, setSizing] = useState(null);
+  // кількість упаковок під вибраний розмір (якщо кількість не змінювали вручну)
+  const packsOf = (x) => {
+    const id = x.product.id;
+    if (packsFor[id]) return packsFor[id];
+    const size = sizeFor[id];
+    if (!size || size === x.product.packSize || x.need === null) return x.packs;
+    let n = Math.max(1, Math.ceil(x.need / size - 1e-9));
+    if (x.product.shelfLifeDays) n = Math.min(n, Math.max(1, Math.floor((x.state.rate * x.product.shelfLifeDays) / size)));
+    return n;
+  };
   const [showBought, setShowBought] = useState(false);
   const boughtIds = new Set(session.map((x) => x.product.id));
   const list = week.list.filter((x) => !boughtIds.has(x.product.id));
@@ -115,8 +136,10 @@ export function ListScreen({ week, data, pending, sync, session, act, open }) {
         <ItemCard
           key={x.product.id}
           x={x}
-          packs={packsFor[x.product.id] ?? x.packs}
+          packs={packsOf(x)}
+          size={sizeFor[x.product.id] ?? x.product.packSize}
           setPacks={(n) => setPacksFor({ ...packsFor, [x.product.id]: n })}
+          onSize={() => setSizing(x)}
           onBuy={act.buy}
           onOpen={() => open('product', { id: x.product.id })}
           entering={fresh.has(x.product.id)}
@@ -141,13 +164,32 @@ export function ListScreen({ week, data, pending, sync, session, act, open }) {
           {showBought && session.map((x) => (
             <div class="mini" key={x.product.id}>
               <Tile icon={x.product.icon} />
-              <div class="mini-text"><b class="strike">{x.product.name}</b><small>{boughtLabel(x.product, Number(x.event.value) || 1)}</small></div>
+              <div class="mini-text"><b class="strike">{x.product.name}</b><small>{boughtLabel(x.product, parseBought(x.event.value, x.product).packs, parseBought(x.event.value, x.product).size)}</small></div>
               <button class="link-btn" onClick={() => act.undo(x.event)}>Повернути</button>
             </div>
           ))}
         </>
       )}
       </div>
+      {sizing && (
+        <SizeSheet
+          x={sizing}
+          size={sizeFor[sizing.product.id] ?? sizing.product.packSize}
+          onClose={() => setSizing(null)}
+          onPick={(size) => {
+            const { [sizing.product.id]: _, ...rest } = packsFor;
+            setPacksFor(rest);
+            setSizeFor({ ...sizeFor, [sizing.product.id]: size });
+            setSizing(null);
+          }}
+          onMakeDefault={async (size) => {
+            const { [sizing.product.id]: _, ...rest } = sizeFor;
+            setSizeFor(rest);
+            setSizing(null);
+            await act.saveEdit(sizing.product, { packSize: size });
+          }}
+        />
+      )}
     </main>
   );
 }

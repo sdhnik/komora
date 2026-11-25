@@ -1,3 +1,4 @@
+import { parseBought } from '../core/model.js';
 import { useRef, useState } from 'preact/hooks';
 import { Head, Ico, Tile } from './components.jsx';
 import { iconUrl } from '../core/icons.js';
@@ -12,7 +13,7 @@ const RESULT = {
 
 function lastBought(x) {
   const b = [...x.state.history].reverse().find((e) => e.type === 'bought');
-  return b ? `Купили ${dayMonth(b.date)} · ${boughtLabel(x.product, Number(b.value) || 1)}` : 'Ще не купували';
+  return b ? `Купили ${dayMonth(b.date)} · ${boughtLabel(x.product, parseBought(b.value, x.product).packs, parseBought(b.value, x.product).size)}` : 'Ще не купували';
 }
 
 export function CheckScreen({ week, act, back }) {

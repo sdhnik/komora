@@ -11,6 +11,15 @@ export function initialRate(p) {
   return p.packSize / (p.daysPerPack || 7);
 }
 
+/**
+ * Значення події bought: «2» (дві звичайні упаковки) або «2@700» (дві упаковки по 700 цієї покупки).
+ */
+export function parseBought(value, product) {
+  const [n, size] = String(value ?? '1').split('@');
+  return { packs: Number(n) || 1, size: Number(size) || product.packSize };
+}
+export const boughtValue = (packs, size, product) => (size && size !== product.packSize ? `${packs}@${size}` : packs);
+
 /** Відповідь перевірки, що відповідає прогнозу днів запасу. */
 export function bucketOf(days) {
   if (days <= 0.5) return 'none';
@@ -74,7 +83,8 @@ export function replay(product, events, today) {
       status = 'learning'; cycles = 0; misses = 0;
     } else if (e.type === 'bought') {
       decay(e.date);
-      S = (S ?? 0) + (Number(e.value) || 1) * product.packSize;
+      const b = parseBought(e.value, product);
+      S = (S ?? 0) + b.packs * b.size;
       cycle = { S, date: e.date };
       anchor = { S, date: e.date };
     } else if (e.type === 'ranOut' || (e.type === 'checked' && e.value === 'none')) {
@@ -150,7 +160,8 @@ export function forecast(product, state, settings, today) {
     else if (state.status === 'known' && state.zeroAt && daysBetween(state.zeroAt, today) > OVERDUE_DAYS) checkReason = 'overdue';
   }
 
-  return { days, group, packs, checkReason };
+  const need = S === null ? null : Math.max(0, r * H - S);
+  return { days, group, packs, need, checkReason };
 }
 
 const STORAGE_ORDER = { cupboard: 0, fridge: 1, freezer: 2 };

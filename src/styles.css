@@ -350,3 +350,10 @@ button:disabled { cursor: default; }
 .kv b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .round.pulse svg { animation: pulse 1s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .35; } }
+
+/* Розмір упаковки в картці */
+.pack-btn { pointer-events: auto; position: relative; z-index: 2; border: 0; background: transparent; padding: 4px 6px 4px 0; margin: -4px 0; text-align: left; display: flex; align-items: baseline; gap: 0; max-width: 100%; color: var(--ink); }
+.pack-btn svg { align-self: center; margin-left: 4px; color: var(--muted); flex: none; }
+.pack-btn.custom span { color: var(--accent-ink); font-weight: 600; }
+.pack-btn.custom svg { color: var(--accent-ink); }
+.pack-btn span { white-space: pre; }

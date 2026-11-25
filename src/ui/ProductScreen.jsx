@@ -1,3 +1,4 @@
+import { parseBought } from '../core/model.js';
 import { useState } from 'preact/hooks';
 import { Head, Ico, Tile } from './components.jsx';
 import { daysLabel, isUrgent, packLabel, rateLabel, boughtLabel, STORAGE_LABEL, CHECK_OPTIONS, CHECK_LABEL, shortDay } from './format.js';
@@ -8,7 +9,7 @@ const GROUP_COLOR = { now: '#FF6A3D', next: '#EDA82F', stock: '#3FA374', unknown
 function describe(e, p, today) {
   const date = e.date === today ? 'сьогодні' : shortDay(e.date);
   if (e.type === 'added') return { date, title: 'Додано', note: '' };
-  if (e.type === 'bought') return { date, title: 'Купили', note: boughtLabel(p, Number(e.value) || 1) };
+  if (e.type === 'bought') return { date, title: 'Купили', note: boughtLabel(p, parseBought(e.value, p).packs, parseBought(e.value, p).size) };
   if (e.type === 'ranOut') return { date, title: 'Закінчилось', note: '' };
   if (e.type === 'checked') return { date, title: 'Перевірка', note: CHECK_LABEL[e.value] ?? '' };
   return { date, title: e.type, note: '' };

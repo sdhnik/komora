@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { migrateIcons, loadAll, addEvent, undoEvent, saveProduct, deleteProduct, pendingCount, importBackup, exportBackup, saveSettings, enqueueAll, getMeta } from '../db.js';
 import { syncNow, ping, resetSyncState } from '../sync.js';
-import { buildWeek, replay, forecast } from '../core/model.js';
+import { buildWeek, replay, forecast, boughtValue } from '../core/model.js';
 import { todayISO, addDays } from '../core/dates.js';
 import { TabBar, Toast } from './components.jsx';
 import { ListScreen } from './ListScreen.jsx';
@@ -133,8 +133,8 @@ export function App() {
     });
 
   const act = {
-    buy: async (p, packs) => {
-      const ev = await addEvent(p.id, 'bought', packs);
+    buy: async (p, packs, size) => {
+      const ev = await addEvent(p.id, 'bought', boughtValue(packs, size, p));
       await reload();
       withUndo(`Куплено: ${p.name}`, ev);
     },

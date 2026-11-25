@@ -29,20 +29,24 @@ export function amount(n, unit) {
 }
 
 /** Ліва частина картки: що саме береться. Повертає [жирне, сіре]. */
-export function packLabel(p, packs = 1) {
+export function packLabel(p, packs = 1, size = p.packSize) {
   if (p.packType === 'piece') return ['Поштучно', ''];
-  if (p.packType === 'weight') return ['На вагу', ` · ${amount(packs * p.packSize, p.unit)}`];
+  if (p.packType === 'weight') return ['На вагу', ` · ${amount(packs * size, p.unit)}`];
   const name = cap((PACK[p.packType] ?? PACK.package)[0]);
-  if (p.packType === 'loaf' || (p.unit === 'pcs' && p.packSize === 1)) return [name, ''];
-  return [name, ` · ${amount(p.packSize, p.unit)}`];
+  if (p.packType === 'loaf' || (p.unit === 'pcs' && size === 1 && p.packSize === 1)) return [name, ''];
+  return [name, ` · ${amount(size, p.unit)}`];
 }
 
+/** Чи можна для товару вибрати інший розмір упаковки при покупці. */
+export const sizeEditable = (p) => p.packType !== 'piece' && p.packType !== 'loaf';
+export const unitLabel = (u) => UNIT[u] ?? u;
+
 /** «3 пляшки · 1 л», «6 шт», «На вагу 1 кг». */
-export function boughtLabel(p, packs) {
+export function boughtLabel(p, packs, size = p.packSize) {
   if (p.packType === 'piece') return `${packs} шт`;
-  if (p.packType === 'weight') return `на вагу ${amount(packs * p.packSize, p.unit)}`;
+  if (p.packType === 'weight') return `на вагу ${amount(packs * size, p.unit)}`;
   const forms = PACK[p.packType] ?? PACK.package;
-  const tail = p.packType === 'loaf' || (p.unit === 'pcs' && p.packSize === 1) ? '' : ` · ${amount(p.packSize, p.unit)}`;
+  const tail = p.packType === 'loaf' || (p.unit === 'pcs' && size === 1) ? '' : ` · ${amount(size, p.unit)}`;
   return `${packs} ${plural(packs, forms)}${tail}`;
 }
 
